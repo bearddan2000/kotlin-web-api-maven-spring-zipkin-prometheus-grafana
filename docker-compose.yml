@@ -1,0 +1,37 @@
+version: '3'
+services:
+
+  prom:
+    image: prom/prometheus:latest
+    ports:
+      - "82:9090"
+    volumes:
+      - ./prom/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  graf:
+    image: grafana/grafana
+    ports:
+      - "83:3000"
+    volumes:
+      - ./graf/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml
+    depends_on:
+      - prom
+
+  zipkin-srv:
+    image: openzipkin/zipkin
+    ports:
+      - "80:9411"
+    depends_on:
+      - prom
+
+  site2:
+    build: site2
+    depends_on:
+      - zipkin-srv
+
+  site1:
+    build: site1
+    ports:
+      - "81:8080"
+    depends_on:
+      - site2
